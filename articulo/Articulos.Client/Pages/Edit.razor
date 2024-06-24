@@ -1,0 +1,85 @@
+﻿@page "/editarArticulo/{ArticuloId:int}";
+
+@inject HttpClient httpClient
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
+
+<EditForm Model="articulo" OnValidSubmit="Guardar">
+    <DataAnnotationsValidator />
+    <div class="card shadow-lg border-0 rounded" style="background-color: #f8f9fa;">
+
+        <div class="card-header bg-primary text-white text-center py-2 rounded">
+            <h3 style="font-weight: bold;" class="mb-0 font-weight-bold">Editar Artículo</h3>
+        </div>
+
+        <div class="card-body">
+            <div class="mb-3">
+                <label for="Descripcion" style="font-weight: bold;" class="form-label">Descripción:</label>
+                <InputText @bind-Value="articulo.Descripcion" class="form-control" placeholder="Ingrese la descripción del artículo" />
+                <ValidationMessage For="@(() => articulo.Descripcion)" />
+            </div>
+            <div class="mb-3">
+                <label for="Costo" style="font-weight: bold;" class="form-label">Costo:</label>
+                <InputNumber @bind-Value="articulo.Costo" class="form-control" placeholder="Ingrese el costo del artículo" />
+                <ValidationMessage For="@(() => articulo.Costo)" />
+            </div>
+            <div class="mb-3">
+                <label for="Ganancia" style="font-weight: bold;" class="form-label">Ganancia:</label>
+                <InputNumber @bind-Value="articulo.Ganancia" class="form-control" placeholder="Ingrese la ganancia del artículo" />
+                <ValidationMessage For="@(() => articulo.Ganancia)" />
+            </div>
+            <div class="mb-3">
+                <label for="Precio" style="font-weight: bold;" class="form-label">Precio:</label>
+                <InputNumber @bind-Value="articulo.Precio" class="form-control" placeholder="Ingrese el precio del artículo" />
+                <ValidationMessage For="@(() => articulo.Precio)" />
+            </div>
+            <div class="mb-3">
+                <label for="Existencia" style="font-weight: bold;" class="form-label">Existencia:</label>
+                <InputNumber @bind-Value="articulo.Existencia" class="form-control" placeholder="Ingrese la existencia del artículo" />
+                <ValidationMessage For="@(() => articulo.Existencia)" />
+            </div>
+        </div>
+
+        <div class="card-footer bg-light d-flex justify-content-end">
+            <div class="btn-group">
+                <a type="button" href="/indexArticulos/" class="btn btn-outline-danger"><span class="fas fa-arrow-left"></span> Retroceder </a>
+                <button type="submit" class="btn btn-outline-success"><span class="fas fa-save"></span> Guardar </button>
+            </div>
+        </div>
+    </div>
+</EditForm>
+
+
+@code {
+
+    public Articulo articulo = new Articulo();
+
+    [Parameter]
+    public int ArticuloId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (ArticuloId > 0)
+        {
+            await Buscar();
+        }
+    }
+
+    public async Task Buscar()
+    {
+        var articuloEncontrado = await httpClient.GetFromJsonAsync<Articulo>("api/Articuloes/" + ArticuloId);
+        if (articuloEncontrado != null)
+        {
+            this.articulo = articuloEncontrado;
+        }
+    }
+
+    public async Task Guardar()
+    {
+        var guardado = await httpClient.PutAsJsonAsync("api/Articuloes/" + ArticuloId, this.articulo);
+        if (guardado.IsSuccessStatusCode)
+        {
+            NavigationManager.NavigateTo("/indexArticulos");
+        }
+    }
+}

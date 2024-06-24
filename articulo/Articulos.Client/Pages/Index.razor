@@ -1,0 +1,125 @@
+﻿@page "/indexArticulos"
+@using Compartido.Models
+@inject HttpClient httpClient
+@inject IJSRuntime JSRuntime
+
+
+<EditForm Model="ListaArticulos" class="border shadow-lg p-3 rounded">
+    <div class="card-header bg-primary text-white text-center py-2 rounded">
+        <h3 style="font-weight: bold;" class="mb-0 font-weight-bold">Centro de Artículos</h3>
+    </div>
+    <div class="card-body">
+        <div class="row mb-3 align-items-end">
+            <div class="col-md-3">
+                <label style="font-weight: bold;" for="Filtro" class="form-label">Filtrar por:</label>
+                <select @bind="filtro" class="form-select">
+                    <option value="id">ID</option>
+                    <option value="descripcion">Descripción</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label style="font-weight: bold;" for="ValorFiltro" class="form-label">Búsqueda:</label>
+                <div class="input-group">
+                    <input @bind="valorFiltro" class="form-control" placeholder="Buscar" />
+                    <button @onclick="Buscar" class="btn btn-outline-primary" type="button">
+                        <span class="fas fa-search"></span> Buscar
+                    </button>
+                </div>
+            </div>
+            <div class="col-md-3 text-end">
+                <a href="/createArticulo" class="btn btn-success" type="button"><span class="fas fa-plus"></span> Crear </a>
+            </div>
+        </div>
+    </div>
+    <table class="table table-bordered text-center">
+        <thead class="bg-primary text-white">
+            <tr>
+                <th>ID</th>
+                <th>Descripción</th>
+                <th>Costo</th>
+                <th>Ganancia</th>
+                <th>Precio</th>
+                <th>Existencia</th>
+                <th>Editar</th>
+                <th>Detalle</th>
+                <th>Eliminar</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (ListaArticulos.Any())
+            {
+                @foreach (var articulo in ListaArticulos)
+                {
+                    <tr>
+                        <td>@articulo.ArticuloId</td>
+                        <td>@articulo.Descripcion</td>
+                        <td>@articulo.Costo</td>
+                        <td>@articulo.Ganancia</td>
+                        <td>@articulo.Precio</td>
+                        <td>@articulo.Existencia</td>
+                        <td>
+                            <a href="/editarArticulo/@articulo.ArticuloId" class="btn btn-sm btn-primary">
+                                <i class="fas fa-trash"></i> Editar
+                                
+                            </a>
+                        </td>
+                        <td>
+                            <a href="/detailsArticulo/@articulo.ArticuloId" class="btn btn-sm btn-primary">
+                                <i class="fas fa-trash"></i> Detalle
+                               
+                            </a>
+                        </td>
+                        <td>
+                            <a href="/deleteArticulo/@articulo.ArticuloId" class="btn btn-sm btn-danger">
+                                <i class="fas fa-trash"></i> Eliminar>
+                               
+                            </a>
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="9" class="text-center">No se ha encontrado ningún artículo.</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</EditForm>
+
+
+@code {
+    private string filtro = "id";
+    private string valorFiltro = "";
+    
+
+    public List<Articulo> ListaArticulos = new List<Articulo>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        ListaArticulos = await httpClient.GetFromJsonAsync<List<Articulo>>("api/Articuloes");
+    }
+
+    private async Task Buscar()
+    {
+        if (!string.IsNullOrWhiteSpace(valorFiltro))
+        {
+            if (filtro == "id" && int.TryParse(valorFiltro, out int articuloId))
+            {
+                ListaArticulos = (await httpClient.GetFromJsonAsync<List<Articulo>>("api/Articuloes"))
+                                    .Where(a => a.ArticuloId == articuloId).ToList();
+            }
+            else if (filtro == "descripcion")
+            {
+                ListaArticulos = (await httpClient.GetFromJsonAsync<List<Articulo>>("api/Articuloes"))
+                                    .Where(a => a.Descripcion.Contains(valorFiltro, StringComparison.OrdinalIgnoreCase)).ToList();
+            }
+        }
+        else
+        {
+            ListaArticulos = await httpClient.GetFromJsonAsync<List<Articulo>>("api/Articuloes");
+        }
+    }
+
+}

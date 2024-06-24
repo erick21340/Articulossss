@@ -1,0 +1,156 @@
+﻿@page "/indexarticulo"
+@using Compartido.Models
+@inject HttpClient httpClient
+@inject IJSRuntime JSRuntime
+
+
+<EditForm Model="ListaArticulos" class="border shadow-lg p-3 rounded">
+    <div class="card-header bg-primary text-white text-center py-2 rounded">
+        <h3 style="font-weight: bold;" class="mb-0 font-weight-bold">Centro de Artículos</h3>
+    </div>
+    <div class="card-body">
+        <div class="row mb-3 align-items-end">
+            <div class="col-md-3">
+                <label style="font-weight: bold;" for="Filtro" class="form-label">Filtrar por:</label>
+                <select @bind="filtro" class="form-select">
+                    <option value="id">ID</option>
+                    <option value="descripcion">Descripción</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label style="font-weight: bold;" for="ValorFiltro" class="form-label">Búsqueda:</label>
+                <div class="input-group">
+                    <input @bind="valorFiltro" class="form-control" placeholder="Buscar" />
+                    <button @onclick="Buscar" class="btn btn-outline-primary" type="button">
+                        <span class="fas fa-search"></span> Buscar
+                    </button>
+                </div>
+            </div>
+            <div class="col-md-3 text-end">
+                <a href="/createArticulo" class="btn btn-success" type="button"><span class="fas fa-plus"></span> Crear </a>
+            </div>
+        </div>
+    </div>
+    <table class="table table-bordered text-center">
+        <thead class="bg-primary text-white">
+            <tr>
+                <th>ID</th>
+                <th>Descripción</th>
+                <th>Costo</th>
+                <th>Ganancia</th>
+                <th>Precio</th>
+                <th>Existencia</th>
+                <th>Editar</th>
+                <th>Detalle</th>
+                <th>Eliminar</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (ListaArticulos.Any())
+            {
+                @foreach (var articulo in ListaArticulos)
+                {
+                    <tr>
+                        <td>@articulo.ArticuloId</td>
+                        <td>@articulo.Descripcion</td>
+                        <td>@articulo.Costo</td>
+                        <td>@articulo.Ganancia</td>
+                        <td>@articulo.Precio</td>
+                        <td>@articulo.Existencia</td>
+                        <td>
+                            <a href="/editarArticulo/@articulo.ArticuloId" style="border: none; background-color: transparent;" class="btn-editar">
+                                <img style="width: 32px; height: 32px;" src="./recursos/editar.png" alt="editar" />
+                            </a>
+                        </td>
+                        <td>
+                            <a href="/detailsArticulo/@articulo.ArticuloId" style="border: none; background-color: transparent;" class="btn-detalle">
+                                <img style="width: 32px; height: 32px;" src="./recursos/detalle.png" alt="detalle" />
+                            </a>
+                        </td>
+                        <td>
+                            <a href="/deleteArticulo/@articulo.ArticuloId" style="border: none; background-color: transparent;" class="btn-eliminar">
+                                <img style="width: 32px; height: 32px;" src="./recursos/eliminar.png" alt="eliminar" />
+                            </a>
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="9" class="text-center">No se ha encontrado ningún artículo.</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</EditForm>
+
+@if (ModalMensaje)
+{
+    <div class="modal d-block" style="z-index: 999999; transition: transform 0.3s ease;">
+        <div class="w-auto position-fixed top-50 start-50 translate-middle">
+            <div class="modal-content" style="border-radius: 20px;">
+
+                <div class="modal-body bg-@mensajeColor text-center text-white" style="border-radius: 15px;">
+                    <label class="fw-bold">@mensajeTexto</label>
+                </div>
+
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private string filtro = "id";
+    private string valorFiltro = "";
+    
+
+    public List<Articulo> ListaArticulos = new List<Articulo>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        ListaArticulos = await httpClient.GetFromJsonAsync<List<Articulo>>("api/Articulos");
+    }
+
+    private async Task Buscar()
+    {
+        if (!string.IsNullOrWhiteSpace(valorFiltro))
+        {
+            if (filtro == "id" && int.TryParse(valorFiltro, out int articuloId))
+            {
+                ListaArticulos = (await httpClient.GetFromJsonAsync<List<Articulo>>("api/Articulos"))
+                                    .Where(a => a.ArticuloId == articuloId).ToList();
+            }
+            else if (filtro == "descripcion")
+            {
+                ListaArticulos = (await httpClient.GetFromJsonAsync<List<Articulo>>("api/Articulos"))
+                                    .Where(a => a.Descripcion.Contains(valorFiltro, StringComparison.OrdinalIgnoreCase)).ToList();
+            }
+
+            if (!ListaArticulos.Any())
+            {
+                await MostrarMensaje("Artículo no encontrado", "Invalido", "articulonoencontrado.mp3");
+            }
+        }
+        else
+        {
+            ListaArticulos = await httpClient.GetFromJsonAsync<List<Articulo>>("api/Articulos");
+        }
+    }
+
+    string mensajeTexto = "", mensajeColor = ""; bool ModalMensaje = false;
+
+    public async Task MostrarMensaje(string mensaje, string tipo, string audio)
+    {
+        mensajeTexto = mensaje;
+        await JSRuntime.InvokeVoidAsync("playAudio", "recursos/audios/" + audio);
+
+        mensajeColor = tipo == "Valido" ? "success" : "danger";
+
+        ModalMensaje = true;
+        StateHasChanged();
+        await Task.Delay(3000);
+        ModalMensaje = false;
+        StateHasChanged();
+    }
+}
