@@ -1,0 +1,86 @@
+﻿@page "/deleteArticulo/{ArticuloID:int}";
+
+@inject HttpClient httpClient
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
+
+<div class="card shadow-lg border-0 rounded" style="background-color: #f8f9fa;">
+    <div class="card-header bg-primary text-white text-center py-2 rounded">
+        <h3 style="font-weight: bold;" class="mb-0 font-weight-bold">Eliminar Artículo</h3>
+    </div>
+
+    <div class="card-body text-center">
+        <div class="col-md-6 mb-3 mx-auto">
+            <label style="font-weight: bold;" class="form-label font-weight-bold">Descripción:</label>
+            <span>@articulo.Descripcion</span>
+        </div>
+
+        <div class="col-md-6 mb-3 mx-auto">
+            <label style="font-weight: bold;" class="form-label font-weight-bold">Costo:</label>
+            <span>@articulo.Costo</span>
+        </div>
+
+        <div class="col-md-6 mb-3 mx-auto">
+            <label style="font-weight: bold;" class="form-label font-weight-bold">Ganancia:</label>
+            <span>@articulo.Ganancia</span>
+        </div>
+
+        <div class="col-md-6 mb-3 mx-auto">
+            <label style="font-weight: bold;" class="form-label font-weight-bold">Precio:</label>
+            <span>@articulo.Precio</span>
+        </div>
+
+        <div class="col-md-12 mb-3 mx-auto">
+            <p style="font-weight: bold;">&iquest;Seguro que deseas eliminar este artículo?</p>
+        </div>
+
+    </div>
+
+    <div class="card-footer bg-light d-flex justify-content-center">
+        <div class="btn-group">
+            <button @onclick="Eliminar" type="button" class="btn btn-success btn-block"><span class="fas fa-check"></span> S&iacute;</button>
+            <a href="/indexArticulos/" class="btn btn-danger btn-block"><span class="fas fa-times"></span> No</a>
+        </div>
+    </div>
+</div>
+
+
+@code {
+
+    public Articulo articulo = new Articulo();
+
+    private string mensajeExito = "";
+    private string mensajeFracaso = "";
+    private string exitoContenedorEstilo = "display: none;";
+    private string fracasoContenedorEstilo = "display: none;";
+
+    [Parameter]
+    public int ArticuloID { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (ArticuloID > 0)
+        {
+            await Buscar();
+        }
+    }
+
+    public async Task Buscar()
+    {
+        var articuloEncontrado = await httpClient.GetFromJsonAsync<Articulo>("api/Articuloes/" + ArticuloID);
+        if (articuloEncontrado != null)
+        {
+            this.articulo = articuloEncontrado;
+        }
+    }
+
+    public async Task Eliminar()
+    {
+        var eliminado = await httpClient.DeleteAsync("api/Articuloes/" + ArticuloID);
+        if (eliminado.IsSuccessStatusCode)
+        {
+            NavigationManager.NavigateTo("/indexArticulos");
+        }
+    }
+
+}
