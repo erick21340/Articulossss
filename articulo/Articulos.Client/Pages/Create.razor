@@ -1,0 +1,70 @@
+﻿@page "/createArticulo";
+
+@inject HttpClient httpClient
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
+
+<EditForm Model="articulo" OnValidSubmit="GuardarArticulo">
+    <DataAnnotationsValidator />
+
+    <div class="card shadow-lg border-0 rounded" style="background-color: #f8f9fa;">
+        <div class="card-header bg-primary text-white text-center py-2 rounded">
+            <h3 style="font-weight: bold;" class="mb-0 font-weight-bold">Registrar Articulo</h3>
+        </div>
+
+        <div class="card-body">
+            <div class="mb-3">
+                <label class="fw-bold">Descripcion</label>
+                <InputText @bind-Value="articulo.Descripcion" class="form-control" placeholder="Ingrese la descripcion" />
+                <ValidationMessage For="@(() => articulo.Descripcion)" />
+            </div>
+
+            <div class="mb-3">
+                <label class="fw-bold">Costo</label>
+                <InputNumber @bind-Value="articulo.Costo" class="form-control" placeholder="Ingrese el costo" />
+                <ValidationMessage For="@(() => articulo.Costo)" />
+            </div>
+
+            <div class="mb-3">
+                <label class="fw-bold">Ganancia</label>
+                <InputNumber @bind-Value="articulo.Ganancia" class="form-control" placeholder="Ingrese la ganancia" />
+                <ValidationMessage For="@(() => articulo.Ganancia)" />
+            </div>
+
+            <div class="mb-3">
+                <label class="fw-bold">Precio</label>
+                <InputNumber @bind-Value="articulo.Precio" class="form-control" placeholder="Ingrese el precio" />
+                <ValidationMessage For="@(() => articulo.Precio)" />
+            </div>
+
+            <div class="mb-3">
+                <label class="fw-bold">Existencia</label>
+                <InputNumber @bind-Value="articulo.Existencia" class="form-control" placeholder="Ingrese la existencia" />
+                <ValidationMessage For="@(() => articulo.Existencia)" />
+            </div>
+        </div>
+
+        <div class="card-footer bg-light d-flex justify-content-end">
+            <div class="btn-group">
+                <a type="button" href="/indexArticulos/" class="btn btn-outline-danger"><span class="fas fa-arrow-left"></span> Retroceder </a>
+                <button type="submit" class="btn btn-outline-success"><span class="fas fa-save"></span> Guardar </button>
+            </div>
+        </div>
+    </div>
+</EditForm>
+
+
+@code {
+    public Articulo articulo = new Articulo();
+
+    public async Task GuardarArticulo()
+    {
+        var guardadoArticulo = await httpClient.PostAsJsonAsync("api/Articuloes", this.articulo);
+
+        if (guardadoArticulo.IsSuccessStatusCode)
+        {
+            NavigationManager.NavigateTo("/indexArticulos");
+        }
+    }
+
+}
